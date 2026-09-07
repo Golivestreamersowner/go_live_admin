@@ -37,6 +37,11 @@ export const marketplaceAdminService = {
     return response.data.data;
   },
 
+  async getOrderDetail(id) {
+    const response = await api.get(`/admin/marketplace/orders/${id}`);
+    return response.data.data;
+  },
+
   async getEarnings(params = {}) {
     const { startDate, endDate } = params;
     const queryParams = new URLSearchParams({

@@ -65,7 +65,7 @@ const AdminLayout = ({ children, user, onLogout }) => {
     ecommerce: ['/vendors', '/products', '/categories', '/orders', '/reviews', '/payouts'],
     marketplace: [
       '/marketplace/products',
-      '/marketplace/cost-table',
+      '/marketplace/vendors',
       '/marketplace/settings',
       '/marketplace/orders',
       '/marketplace/earnings',
@@ -272,7 +272,7 @@ const AdminLayout = ({ children, user, onLogout }) => {
       groupKey: 'marketplace',
       children: [
         { name: 'Products', href: '/marketplace/products', icon: BadgeCheck },
-        { name: 'Cost Table', href: '/marketplace/cost-table', icon: Tags },
+        { name: 'Vendors', href: '/marketplace/vendors', icon: Users },
         { name: 'Settings', href: '/marketplace/settings', icon: Settings },
         { name: 'Orders', href: '/marketplace/orders', icon: ClipboardList },
         { name: 'Earnings', href: '/marketplace/earnings', icon: DollarSign },

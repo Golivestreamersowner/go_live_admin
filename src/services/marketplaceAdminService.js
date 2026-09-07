@@ -1,35 +1,26 @@
 import api from './api';
 
 export const marketplaceAdminService = {
-  async getCostEntries() {
-    const response = await api.get('/admin/marketplace/cost-entries');
-    return response.data.data;
-  },
-
-  async saveCostEntry({ blueprintId, printProviderId, size, costCents }) {
-    const response = await api.put('/admin/marketplace/cost-entries', {
-      blueprintId,
-      printProviderId,
-      size,
-      costCents,
-    });
-    return response.data.data;
-  },
-
-  async deleteCostEntry(id) {
-    const response = await api.delete(`/admin/marketplace/cost-entries/${id}`);
-    return response.data;
-  },
-
   async getSettings() {
     const response = await api.get('/admin/marketplace/settings');
     return response.data.data;
   },
 
-  async updateSettings({ platformMarkupPct, vendorMarkupCapPct }) {
+  async updateSettings({
+    platformMarkup,
+    vendorMarkupCapPct,
+    taxRatePct,
+    requireProductApproval,
+    requireBannerApproval,
+    themeColor,
+  }) {
     const response = await api.patch('/admin/marketplace/settings', {
-      platformMarkupPct,
+      platformMarkup,
       vendorMarkupCapPct,
+      taxRatePct,
+      requireProductApproval,
+      requireBannerApproval,
+      themeColor,
     });
     return response.data.data;
   },
@@ -79,6 +70,46 @@ export const marketplaceAdminService = {
 
   async rejectProduct(id, note) {
     const response = await api.patch(`/admin/marketplace/products/${id}/reject`, { note });
+    return response.data.data;
+  },
+
+  async getVendors(params = {}) {
+    const { search, suspended, page = 1, limit = 20 } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+      ...(suspended !== undefined && suspended !== '' && { suspended: String(suspended) }),
+    });
+    const response = await api.get(`/admin/marketplace/vendors?${queryParams}`);
+    return response.data.data;
+  },
+
+  async getVendor(id) {
+    const response = await api.get(`/admin/marketplace/vendors/${id}`);
+    return response.data.data;
+  },
+
+  async setVendorSuspended(id, suspended, reason) {
+    const response = await api.patch(`/admin/marketplace/vendors/${id}/suspend`, {
+      suspended,
+      reason,
+    });
+    return response.data.data;
+  },
+
+  async cancelSuborder(id, reason) {
+    const response = await api.patch(`/admin/marketplace/orders/${id}/cancel`, { reason });
+    return response.data.data;
+  },
+
+  async approveBanner(vendorId) {
+    const response = await api.patch(`/admin/marketplace/banners/${vendorId}/approve`);
+    return response.data.data;
+  },
+
+  async rejectBanner(vendorId, note) {
+    const response = await api.patch(`/admin/marketplace/banners/${vendorId}/reject`, { note });
     return response.data.data;
   },
 };

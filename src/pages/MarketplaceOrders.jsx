@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Ban } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
 import {
   Table,
   TableHeader,
@@ -11,6 +14,13 @@ import {
   TableRow,
   TableCell,
 } from '../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog';
 import { marketplaceAdminService } from '../services/marketplaceAdminService';
 
 const STATUS_OPTIONS = ['', 'pending', 'submitted', 'in_production', 'shipped', 'delivered', 'cancelled', 'failed'];
@@ -25,6 +35,10 @@ const STATUS_BADGE = {
   failed: 'destructive',
 };
 
+// Cancelling only makes sense before a sale is fully wrapped up — a
+// delivered or already-cancelled order has nothing left to reverse.
+const CANCELLABLE_STATUSES = ['pending', 'submitted', 'in_production', 'shipped', 'failed'];
+
 const money = (cents) => `$${((cents ?? 0) / 100).toFixed(2)}`;
 
 const MarketplaceOrders = () => {
@@ -33,6 +47,7 @@ const MarketplaceOrders = () => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState(null);
   const limit = 20;
 
   const fetchOrders = async () => {
@@ -108,6 +123,7 @@ const MarketplaceOrders = () => {
                     <TableHead>Platform profit</TableHead>
                     <TableHead>Vendor payout</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -132,6 +148,14 @@ const MarketplaceOrders = () => {
                           </Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {CANCELLABLE_STATUSES.includes(order.status) && (
+                          <Button variant="ghost" size="sm" onClick={() => setCancelTarget(order)}>
+                            <Ban className="w-4 h-4 mr-1 text-red-500" />
+                            Cancel
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -152,7 +176,77 @@ const MarketplaceOrders = () => {
           Next
         </Button>
       </div>
+
+      {cancelTarget && (
+        <CancelDialog
+          order={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onCancelled={() => {
+            setCancelTarget(null);
+            fetchOrders();
+          }}
+        />
+      )}
     </div>
+  );
+};
+
+const CancelDialog = ({ order, onClose, onCancelled }) => {
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!reason.trim()) {
+      toast.error('A cancellation reason is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      await marketplaceAdminService.cancelSuborder(order._id, reason.trim());
+      toast.success('Order cancelled and buyer refunded');
+      onCancelled();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const refundAmount = (order.subtotal ?? 0) + (order.shippingPrice ?? 0);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cancel this order?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2 text-sm">
+          <p className="text-gray-600">
+            This refunds <span className="font-semibold text-gray-900">{money(refundAmount)}</span>{' '}
+            to the buyer via PayPal (this vendor's share only), attempts to cancel the Printify
+            fulfillment order, and reverses the vendor's payout if it was already credited.
+          </p>
+          <div>
+            <Label htmlFor="cancelReason">Reason (required)</Label>
+            <Textarea
+              id="cancelReason"
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Buyer requested cancellation, item out of stock"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Back
+          </Button>
+          <Button variant="destructive" onClick={handleConfirm} disabled={saving}>
+            {saving ? 'Cancelling…' : 'Confirm cancel & refund'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

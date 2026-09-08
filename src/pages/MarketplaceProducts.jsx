@@ -37,20 +37,16 @@ const STATUS_BADGE = {
 
 const money = (cents) => `$${((cents ?? 0) / 100).toFixed(2)}`;
 
-/**
- * Printify returns every mockup angle (front/back/close-ups/size chart) for
- * every color as one flat list, tagged with which variantIds each image
- * applies to — not grouped by color itself. Cross-reference against the
- * product's own variants (which do carry options.color, denormalized at
- * save time) to pick one representative photo per color. A mockup whose
- * variantIds span more than one color (or none, e.g. a size chart applying
- * to every variant) isn't tied to a single color, so it's left out of the
- * per-color grid — falls back to showing every raw mockup when no product
- * has color options at all (e.g. size-only products like stickers/mugs).
- */
+// Groups Printify's flat mockup list by color; prefers the position the vendor actually placed artwork on over Printify's unreliable isDefault/front flags, falling back to the first image per color.
 const groupMockupsByColor = (product) => {
   const variantColor = new Map(
     (product.variants ?? []).map((v) => [v.variantId, v.options?.color || '']),
+  );
+  const editedPositions = new Set(
+    (product.printAreas ?? [])
+      .flatMap((area) => area.placeholders ?? [])
+      .filter((ph) => (ph.images ?? []).length > 0)
+      .map((ph) => ph.position),
   );
   const byColor = new Map();
   for (const m of product.printify?.mockups ?? []) {
@@ -60,7 +56,9 @@ const groupMockupsByColor = (product) => {
     if (colors.size !== 1) continue;
     const [color] = colors;
     const existing = byColor.get(color);
-    if (!existing || m.isDefault || (m.position === 'front' && !existing.isDefault)) {
+    if (!existing) {
+      byColor.set(color, m);
+    } else if (!editedPositions.has(existing.position) && editedPositions.has(m.position)) {
       byColor.set(color, m);
     }
   }
@@ -338,7 +336,7 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
               const byColor = groupMockupsByColor(product);
               return (
                 <div>
-                  <Label>Product mockups</Label>
+                  <Label>Variants</Label>
                   {byColor.length > 0 ? (
                     <div className="mt-1 grid grid-cols-3 gap-3 sm:grid-cols-4">
                       {byColor.map(([color, m]) => (

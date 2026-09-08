@@ -49,6 +49,7 @@ import {
   Radio,
   Send,
   Megaphone,
+  Palette,
 } from 'lucide-react';
 import { supportService } from '../services/supportService';
 
@@ -264,6 +265,11 @@ const AdminLayout = ({ children, user, onLogout }) => {
       name: 'Features Allowed',
       href: '/features-allowed',
       icon: SlidersHorizontal,
+    },
+    {
+      name: 'App Theme',
+      href: '/theme',
+      icon: Palette,
     },
     {
       name: 'Marketplace',

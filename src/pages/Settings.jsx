@@ -26,11 +26,11 @@ const Settings = () => {
     },
     {
       id: 'appearance',
-      title: 'Appearance (Placeholder)',
-      description: 'Customize the look and feel of the application',
+      title: 'App Theme',
+      description: 'Light/Dark colors and Home/Feed/Live section backgrounds',
       icon: Palette,
       color: 'bg-purple-500',
-      path: '/settings/appearance'
+      path: '/theme'
     },
     {
       id: 'database',
@@ -51,7 +51,10 @@ const Settings = () => {
   ];
 
   const handleCategoryClick = (category) => {
-    // For now, all categories are placeholders
+    if (category.id === 'appearance') {
+      navigate('/theme');
+      return;
+    }
     console.log(`Navigate to ${category.title}`);
   };
 

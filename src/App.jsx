@@ -59,6 +59,7 @@ import FraudCascade from './pages/FraudCascade';
 import FraudCascadeDetails from './pages/FraudCascadeDetails';
 import IapManagement from './pages/IapManagement';
 import FeaturesAllowed from './pages/FeaturesAllowed';
+import ThemeAppearance from './pages/ThemeAppearance';
 import MarketplaceProducts from './pages/MarketplaceProducts';
 import MarketplaceCostTable from './pages/MarketplaceCostTable';
 import MarketplaceSettings from './pages/MarketplaceSettings';
@@ -733,6 +734,16 @@ function App() {
               <ProtectedRoute>
                 <AdminLayout>
                   <FeaturesAllowed />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/theme"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <ThemeAppearance />
                 </AdminLayout>
               </ProtectedRoute>
             }

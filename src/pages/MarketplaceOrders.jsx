@@ -369,7 +369,7 @@ const CancelDialog = ({ order, onClose, onCancelled }) => {
         <div className="space-y-3 py-2 text-sm">
           <p className="text-gray-600">
             This refunds <span className="font-semibold text-gray-900">{money(refundAmount)}</span>{' '}
-            to the buyer via PayPal (this vendor's share only), attempts to cancel the Printify
+            to the buyer via PayPal (this vendor's share only), attempts to cancel the
             fulfillment order, and reverses the vendor's payout if it was already credited.
           </p>
           <div>

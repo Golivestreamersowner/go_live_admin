@@ -71,7 +71,7 @@ const MarketplaceProducts = () => {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         <p className="mt-1 text-sm text-gray-500">
-          New products a streamer submits wait here for approval before they go live on Printify.
+          New products a streamer submits wait here for approval before they go live.
         </p>
       </div>
 
@@ -259,7 +259,7 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
     setSaving(true);
     try {
       await marketplaceAdminService.approveProduct(productId, buildEdits());
-      toast.success('Product approved — publishing to Printify');
+      toast.success('Product approved — publishing');
       onDecided();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve product');
@@ -304,6 +304,23 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
               )}
             </div>
 
+            {!!product.printify?.mockups?.length && (
+              <div>
+                <Label>Product mockups</Label>
+                <div className="mt-1 flex gap-2 overflow-x-auto pb-1">
+                  {product.printify.mockups.map((m, idx) => (
+                    <img
+                      key={idx}
+                      src={m.src}
+                      alt={m.position || `Mockup ${idx + 1}`}
+                      title={m.position}
+                      className="h-28 w-28 shrink-0 rounded-md border border-gray-200 object-cover"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="reviewTitle">Title</Label>
               <Input id="reviewTitle" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -345,7 +362,7 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Enabled</TableHead>
-                      <TableHead>Variant ID</TableHead>
+                      <TableHead>Variant</TableHead>
                       <TableHead>Cost</TableHead>
                       <TableHead>Vendor keeps</TableHead>
                       <TableHead>Platform</TableHead>
@@ -364,7 +381,7 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
                             }
                           />
                         </TableCell>
-                        <TableCell>{v.variantId}</TableCell>
+                        <TableCell>{v.title || `Variant ${v.variantId}`}</TableCell>
                         <TableCell>{money(v.costCents)}</TableCell>
                         <TableCell>{money(v.vendorMarkupCents)}</TableCell>
                         <TableCell>{money(v.platformCommissionCents)}</TableCell>

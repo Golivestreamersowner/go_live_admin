@@ -254,10 +254,10 @@ const MarketplaceSettings = () => {
           <CardHeader>
             <CardTitle>Buyer tax estimate</CardTitle>
             <CardDescription>
-              Printify has no way to quote real tax before an order is placed, so this flat
-              rate is charged to the buyer at checkout as an estimate. The actual amount
-              Printify charges is compared against it afterward and flagged as a margin
-              warning on the Orders page if it ran over.
+              Our fulfillment partner has no way to quote real tax before an order is placed,
+              so this flat rate is charged to the buyer at checkout as an estimate. The actual
+              amount the fulfillment partner charges is compared against it afterward and
+              flagged as a margin warning on the Orders page if it ran over.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

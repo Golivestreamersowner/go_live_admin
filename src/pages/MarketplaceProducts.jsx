@@ -37,6 +37,34 @@ const STATUS_BADGE = {
 
 const money = (cents) => `$${((cents ?? 0) / 100).toFixed(2)}`;
 
+// Groups Printify's flat mockup list by color; prefers the position the vendor actually placed artwork on over Printify's unreliable isDefault/front flags, falling back to the first image per color.
+const groupMockupsByColor = (product) => {
+  const variantColor = new Map(
+    (product.variants ?? []).map((v) => [v.variantId, v.options?.color || '']),
+  );
+  const editedPositions = new Set(
+    (product.printAreas ?? [])
+      .flatMap((area) => area.placeholders ?? [])
+      .filter((ph) => (ph.images ?? []).length > 0)
+      .map((ph) => ph.position),
+  );
+  const byColor = new Map();
+  for (const m of product.printify?.mockups ?? []) {
+    const colors = new Set(
+      (m.variantIds ?? []).map((id) => variantColor.get(id)).filter(Boolean),
+    );
+    if (colors.size !== 1) continue;
+    const [color] = colors;
+    const existing = byColor.get(color);
+    if (!existing) {
+      byColor.set(color, m);
+    } else if (!editedPositions.has(existing.position) && editedPositions.has(m.position)) {
+      byColor.set(color, m);
+    }
+  }
+  return [...byColor.entries()];
+};
+
 const MarketplaceProducts = () => {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -71,7 +99,7 @@ const MarketplaceProducts = () => {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         <p className="mt-1 text-sm text-gray-500">
-          New products a streamer submits wait here for approval before they go live on Printify.
+          New products a streamer submits wait here for approval before they go live.
         </p>
       </div>
 
@@ -259,7 +287,7 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
     setSaving(true);
     try {
       await marketplaceAdminService.approveProduct(productId, buildEdits());
-      toast.success('Product approved — publishing to Printify');
+      toast.success('Product approved — publishing');
       onDecided();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve product');
@@ -304,6 +332,41 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
               )}
             </div>
 
+            {!!product.printify?.mockups?.length && (() => {
+              const byColor = groupMockupsByColor(product);
+              return (
+                <div>
+                  <Label>Variants</Label>
+                  {byColor.length > 0 ? (
+                    <div className="mt-1 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                      {byColor.map(([color, m]) => (
+                        <div key={color}>
+                          <img
+                            src={m.src}
+                            alt={color}
+                            className="aspect-square w-full rounded-md border border-gray-200 object-cover"
+                          />
+                          <p className="mt-1 text-center text-xs font-medium text-gray-700">{color}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex gap-2 overflow-x-auto pb-1">
+                      {product.printify.mockups.map((m, idx) => (
+                        <img
+                          key={idx}
+                          src={m.src}
+                          alt={m.position || `Mockup ${idx + 1}`}
+                          title={m.position}
+                          className="h-28 w-28 shrink-0 rounded-md border border-gray-200 object-cover"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div>
               <Label htmlFor="reviewTitle">Title</Label>
               <Input id="reviewTitle" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -344,18 +407,18 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Enabled</TableHead>
-                      <TableHead>Variant ID</TableHead>
-                      <TableHead>Cost</TableHead>
-                      <TableHead>Vendor keeps</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Retail price</TableHead>
+                      <TableHead className="h-7 py-1">Enabled</TableHead>
+                      <TableHead className="h-7 py-1">Variant</TableHead>
+                      <TableHead className="h-7 py-1">Cost</TableHead>
+                      <TableHead className="h-7 py-1">Vendor keeps</TableHead>
+                      <TableHead className="h-7 py-1">Platform</TableHead>
+                      <TableHead className="h-7 py-1">Retail price</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(product.variants ?? []).map((v) => (
                       <TableRow key={v.variantId}>
-                        <TableCell>
+                        <TableCell className="py-1">
                           <input
                             type="checkbox"
                             checked={enabledVariants[v.variantId] !== false}
@@ -364,11 +427,11 @@ const ReviewDialog = ({ productId, onClose, onDecided }) => {
                             }
                           />
                         </TableCell>
-                        <TableCell>{v.variantId}</TableCell>
-                        <TableCell>{money(v.costCents)}</TableCell>
-                        <TableCell>{money(v.vendorMarkupCents)}</TableCell>
-                        <TableCell>{money(v.platformCommissionCents)}</TableCell>
-                        <TableCell className="font-medium">{money(v.price)}</TableCell>
+                        <TableCell className="py-1">{v.title || `Variant ${v.variantId}`}</TableCell>
+                        <TableCell className="py-1">{money(v.costCents)}</TableCell>
+                        <TableCell className="py-1">{money(v.vendorMarkupCents)}</TableCell>
+                        <TableCell className="py-1">{money(v.platformCommissionCents)}</TableCell>
+                        <TableCell className="py-1 font-medium">{money(v.price)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

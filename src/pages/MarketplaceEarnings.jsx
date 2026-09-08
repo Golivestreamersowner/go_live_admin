@@ -53,7 +53,7 @@ const MarketplaceEarnings = () => {
         <h1 className="text-2xl font-bold text-gray-900">Marketplace Earnings</h1>
         <p className="mt-1 text-sm text-gray-500">
           Platform profit is the guaranteed markup only — recovered cost is a pass-through
-          to Printify, not profit.
+          to fulfillment, not profit.
         </p>
       </div>
 
@@ -99,7 +99,7 @@ const MarketplaceEarnings = () => {
             <StatCard
               label="Cost recovered"
               value={money(summary.platformCostCents)}
-              hint="Pass-through to Printify — not profit"
+              hint="Pass-through to fulfillment — not profit"
             />
             <StatCard label="Shipping collected" value={money(summary.shippingCents)} />
             <StatCard label="Product subtotal" value={money(summary.subtotalCents)} />
@@ -111,7 +111,7 @@ const MarketplaceEarnings = () => {
                   {summary.marginWarningCount > 0 && <AlertTriangle className="w-4 h-4 text-amber-500" />}
                 </span>
               }
-              hint="Orders where Printify's actual bill exceeded what was collected"
+              hint="Orders where the fulfillment partner's actual bill exceeded what was collected"
             />
           </div>
 
